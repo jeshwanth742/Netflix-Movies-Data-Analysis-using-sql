@@ -29,3 +29,6 @@ Our next steps include integrating user ratings for deeper insights and comparin
 
 📌 Takeaway
 This analysis highlights SQL's power in turning raw data into meaningful insights. Stay tuned for more!
+![image](https://github.com/user-attachments/assets/50753b42-8c00-48d1-bddd-eef2b64881fa)
+https://drive.google.com/file/d/1UmVXwVvQr8EIFCpUXL4rzxKF8jfw4pIh/view?usp=classroom_web&authuser=0
+
