@@ -1,0 +1,100 @@
+1.List all titles with their show_id, title, and type.
+ SELECT show_id, title, type FROM            
+netflix_titles;
+ 
+2. Display all columns for titles that are Movies.
+ SELECT *FROM netflix_titles
+ WHERE type = 'Movie';
+ 
+3. List TV shows that were released in the year 2021.
+ SELECT *FROM netflix_titles
+ WHERE type = 'TV Show' AND release_year = 2021;
+
+4. Find all titles where the description contains the word 
+'family’.
+ SELECT *FROM netflix_titles
+ WHERE description LIKE '%family%';
+ 
+5. Count the total number of titles in the dataset.
+ SELECT COUNT(*) AS total_titlesFROM 
+netflix_titles;
+
+6. Find the average duration of all movies (in minutes, consider 400 minutes per season for TV Shows).
+ SELECT AVG(    
+CASE        
+WHEN duration LIKE '%Season%' THEN CAST(LEFT(duration, LOCATE(' ', duration) - 1)                 
+AS UNSIGNED)* 400    
+ELSE CAST(LEFT(duration, LOCATE(' ', duration) - 1) AS UNSIGNED)    END)
+ AS average_durationFROM netflix_titlesWHERE type = 'Movie';
+ 
+7. List the top 5 latest titles based on the date_added, sorted in descending order.
+ SELECT *FROM netflix_titlesORDER BY STR_TO_DATE(date_added, '%M %d, %Y') DESCLIMIT 5;
+ 
+8. List all titles along with the number of other titles by the same director.
+ SELECT show_id, title, director,     
+(SELECT COUNT(*) FROM netflix_titles t2 
+WHERE t2.director = t1.director) AS number_of_titles_by_directorFROM netflix_titles t1;
+
+9. Find the total number of titles for each country.
+ SELECT country, COUNT(*) AS title_countFROM netflix_titlesGROUP BY country;
+ 
+10. Categorize titles into Family, Kids, and Adult based on their rating using a CASE statement.
+ SELECT title, rating,       
+CASE            
+WHEN rating IN ('G', 'PG', 'PG-13') THEN 'Family'           
+WHEN rating IN ('TV-Y', 'TV-Y7', 'TV-G') THEN 'Kids'          
+ELSE 'Adult'      
+END AS categoryFROM netflix_titles;
+ 
+11. Add a new column title_length to the titles table that calculates the length of each title.
+ ALTER TABLE netflix_titlesADD COLUMN title_length INT;
+ UPDATE netflix_titlesSET title_length = CHAR_LENGTH(title);
+
+12. Find the title with the longest duration in minutes.
+ SELECT title,        
+CASE            
+WHEN duration LIKE '%Season%' THEN CAST(LEFT(duration, LOCATE(' ', duration) - 1) 
+AS UNSIGNED) * 400 
+ELSE CAST(LEFT(duration, LOCATE(' ', duration) - 1) AS UNSIGNED)       
+END AS duration_in_minutesFROM netflix_titlesORDER BY duration_in_minutes DESCLIMIT 1;
+ 
+13. Create a view named RecentTitles that includes titles added in the last 30 days.
+ CREATE VIEW RecentTitles 
+ASSELECT *FROM netflix_titles
+ WHERE STR_TO_DATE(date_added, '%M %d, %Y') >= CURDATE() - INTERVAL 30 DAY;
+
+14. Rank titles based on their release_year within each country using a window function.
+ SELECT show_id, title, country, release_year,       
+RANK() OVER (PARTITION BY country ORDER BY release_year DESC)
+ AS rank_within_countryFROM netflix_titles;
+ 
+15. Calculate the cumulative count of titles added each month sorted by date_added.
+ SELECT DATE_FORMAT(STR_TO_DATE(date_added, '%M %d, %Y'), '%Y-%m') AS month,       
+COUNT(*) AS titles_added,       
+SUM(COUNT(*)) OVER (ORDER BY DATE_FORMAT(STR_TO_DATE
+ (date_added, '%M %d, %Y'), '%Y-%m’))
+ AS cumulative_titlesFROM netflix_titlesGROUP BY monthORDER BY month;
+ 
+16. Create a stored procedure to update the rating of a title given its show_id and new rating.
+ DELIMITER //CREATE PROCEDURE UpdateRating(IN p_show_id VARCHAR(10), IN p_new_rating
+ VARCHAR(10))BEGIN    
+UPDATE netflix_titles    SET rating = p_new_rating    WHERE show_id = p_show_id;
+ END    //DELIMITER ;
+
+17. Find the country with the highest average rating for titles.
+ SELECT country, AVG(    
+CASE         
+WHEN rating LIKE 'TV%' THEN NULL       
+WHEN rating = 'G' THEN 1       
+WHEN rating = 'PG' THEN 2        
+WHEN rating = 'PG-13' THEN 3        
+WHEN rating = 'R' THEN 4        
+ELSE 5    
+END) AS avg_ratingFROM netflix_titlesGROUP BY country
+ ORDER BY avg_rating DESCLIMIT 1;
+ 
+18. Find pairs of titles from the same country where one title has a higher rating than the other.
+ SELECT t1.show_id AS 
+show_id_1, t1.title AS title_1, t1.rating AS rating_1,      
+t2.show_id AS show_id_2, t2.title AS title_2, t2.rating AS rating_2
+ FROM netflix_titles t1JOIN netflix_titles t2 ON t1.country = t2.country AND t1.rating > t2.rating;
